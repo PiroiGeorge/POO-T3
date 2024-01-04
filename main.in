@@ -1,0 +1,116 @@
+#include <iostream>
+#include <string>
+#include <memory>
+
+// Abstract Operation Class
+class Operation {
+public:
+    virtual double execute(double a, double b) = 0;
+    virtual ~Operation() {}
+};
+
+// Concrete Operations
+class Add : public Operation {
+public:
+    double execute(double a, double b) override {
+        return a + b;
+    }
+};
+
+class Subtract : public Operation {
+public:
+    double execute(double a, double b) override {
+        return a - b;
+    }
+};
+
+class Multiply : public Operation {
+public:
+    double execute(double a, double b) override {
+        return a * b;
+    }
+};
+
+class Divide : public Operation {
+public:
+    double execute(double a, double b) override {
+        if(b == 0) return 0; // simple error handling
+        return a / b;
+    }
+};
+
+// Factory Method to create operations
+class OperationFactory {
+public:
+    static std::unique_ptr<Operation> createOperation(char op) {
+        switch (op) {
+            case '+': return std::make_unique<Add>();
+            case '-': return std::make_unique<Subtract>();
+            case '*': return std::make_unique<Multiply>();
+            case '/': return std::make_unique<Divide>();
+            default: return nullptr;
+        }
+    }
+};
+
+// Singleton Calculator Class
+template <typename T>
+class Calculator {
+private:
+    Calculator() {}
+public:
+    static Calculator& getInstance() {
+        static Calculator instance;
+        return instance;
+    }
+
+    T operate(T a, T b, char op) {
+        auto operation = OperationFactory::createOperation(op);
+        if (!operation) {
+            std::cerr << "Invalid operation!" << std::endl;
+            return 0;
+        }
+        return static_cast<T>(operation->execute(a, b));
+    }
+};
+
+// Function Template to display Result
+template <typename T>
+void displayResult(T result) {
+    std::cout << "Result: " << result << std::endl;
+}
+
+// Specialization for string
+template <>
+void displayResult<std::string>(std::string result) {
+    std::cout << "Calculation Statement: " << result << std::endl;
+}
+
+int main() {
+    // Double calculator instance
+    Calculator<double>& doubleCalc = Calculator<double>::getInstance();
+    double aDouble, bDouble;
+    char op;
+
+    std::cout << "Enter first number (double): ";
+    std::cin >> aDouble;
+    std::cout << "Enter operation (+, -, *, /): ";
+    std::cin >> op;
+    std::cout << "Enter second number (double): ";
+    std::cin >> bDouble;
+    displayResult(doubleCalc.operate(aDouble, bDouble, op));
+
+    // Integer calculator instance
+    Calculator<int>& intCalc = Calculator<int>::getInstance();
+    int aInt, bInt;
+
+    std::cout << "Enter first number (int): ";
+    std::cin >> aInt;
+    std::cout << "Enter operation (+, -, *, /): ";
+    std::cin >> op;
+    std::cout << "Enter second number (int): ";
+    std::cin >> bInt;
+    displayResult(intCalc.operate(aInt, bInt, op));
+
+    return 0;
+}
